@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BNeural - Sistema de Gestão</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#f4c542">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <h1>BNeural - Sistema de Gestão Empresarial</h1>
+      <div class="header-controls">
+        <button id="themeToggle" class="theme-btn">🌙</button>
+        <button id="installBtn" class="install-btn" style="display: none;">📱 Instalar App</button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="menu">
+    <button onclick="mostrarPainel('orcamento')" class="menu-btn active" data-panel="orcamento">
+      📋 Novo Orçamento
+    </button>
+    <button onclick="mostrarPainel('dashboard')" class="menu-btn" data-panel="dashboard">
+      📊 Dashboard
+    </button>
+    <button onclick="mostrarPainel('caixa')" class="menu-btn" data-panel="caixa">
+      💰 Controle de Caixa
+    </button>
+    <button onclick="mostrarPainel('contas')" class="menu-btn" data-panel="contas">
+      📅 Contas Fixas
+    </button>
+    <button onclick="mostrarPainel('config')" class="menu-btn" data-panel="config">
+      ⚙️ Configurações
+    </button>
+    <button onclick="mostrarPainel('relatorios')" class="menu-btn" data-panel="relatorios">
+      📄 Relatórios
+    </button>
+    <button onclick="mostrarPainel('historico-pdfs')" class="menu-btn" data-panel="historico-pdfs">
+      🖨️ Histórico de PDFs
+    </button>
+  </nav>
+
+  <main>
+    <!-- Painel Orçamento -->
+    <section id="orcamento" class="painel active">
+      <h2>Novo Orçamento</h2>
+      <form id="formOrcamento">
+        <input type="text" placeholder="Nome do Cliente" name="cliente" required>
+        <input type="text" placeholder="Empresa do Cliente" name="empresa">
+        <input type="tel" placeholder="Telefone (com DDD)" name="telefone" required>
+        
+        <div id="itensOrcamento">
+          <div class="item-orcamento">
+            <h3>Item 1</h3>
+            
+            <!-- Seletor de Produto Pré-fixado -->
+            <div class="produto-selector">
+              <select data-item="0" onchange="selecionarProduto(0)">
+                <option value="">Selecionar produto pré-fixado (opcional)</option>
+              </select>
+              <button type="button" onclick="limparItem(0)" class="btn-secondary">🗑️ Limpar</button>
+            </div>
+            
+            <input type="text" placeholder="Descrição do Serviço" name="descricao_0" required>
+            <div class="medidas">
+              <input type="number" placeholder="Largura (m)" step="0.01" name="largura_0">
+              <input type="number" placeholder="Altura (m)" step="0.01" name="altura_0">
+            </div>
+            <input type="number" placeholder="Valor Unitário (R$)" step="0.01" name="valor_unitario_0" required>
+            <input type="number" placeholder="Quantidade" name="quantidade_0" value="1" min="1">
+            <button type="button" onclick="removerItem(0)" class="btn-remover" style="display: none;">❌ Remover</button>
+          </div>
+        </div>
+        
+        <button type="button" onclick="adicionarItem()" class="btn-adicionar">➕ Adicionar Item</button>
+        
+        <div class="total-orcamento">
+          <strong>Total: R$ <span id="totalOrcamento">0,00</span></strong>
+        </div>
+
+        <!-- Campos Extras do Orçamento -->
+        <div class="orcamento-extras">
+          <h3>Informações Adicionais</h3>
+          <div class="extras-grid">
+            <div>
+              <label>Prazo de Entrega:</label>
+              <input type="text" placeholder="Ex: 7 dias úteis" name="prazo_entrega" required>
+            </div>
+            <div>
+              <label>Forma de Pagamento:</label>
+              <select name="forma_pagamento" required>
+                <option value="">Selecione...</option>
+                <option value="dinheiro">Dinheiro</option>
+                <option value="cartao_credito">Cartão de Crédito</option>
+                <option value="cartao_debito">Cartão de Débito</option>
+                <option value="pix">PIX</option>
+                <option value="a_combinar">A Combinar</option>
+                <option value="boleto">Boleto</option>
+              </select>
+            </div>
+            <div>
+              <label>Garantia (em meses):</label>
+              <input type="number" placeholder="Ex: 12" name="garantia_meses" min="0">
+            </div>
+            <div>
+              <label>Nome do Vendedor:</label>
+              <input type="text" placeholder="Ex: João Silva" name="nome_vendedor">
+            </div>
+          </div>
+        </div>
+
+        <div class="botoes">
+          <button type="button" onclick="gerarPDF()" class="btn-primary">📄 Gerar PDF</button>
+          <button type="button" onclick="enviarWhatsApp()" class="btn-success">📱 Enviar WhatsApp</button>
+          <button type="button" onclick="lancarCaixa()" class="btn-info">💰 Lançar no Caixa</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Painel Dashboard -->
+    <section id="dashboard" class="painel">
+      <h2>Dashboard Financeiro</h2>
+      <div class="dashboard-cards">
+        <div class="card">
+          <h3>Saldo Atual</h3>
+          <p id="saldoAtual" class="valor-grande">R$ 0,00</p>
+        </div>
+        <div class="card">
+          <h3>Entradas do Mês</h3>
+          <p id="entradasMes" class="valor-grande">R$ 0,00</p>
+        </div>
+        <div class="card">
+          <h3>Pendências</h3>
+          <p id="pendenciasMes" class="valor-grande">R$ 0,00</p>
+        </div>
+      </div>
+      <div class="grafico-container">
+        <canvas id="graficoFinanceiro"></canvas>
+      </div>
+    </section>
+
+    <!-- Painel Caixa -->
+    <section id="caixa" class="painel">
+      <h2>Controle de Caixa</h2>
+      
+      <div class="caixa-actions">
+        <button onclick="mostrarFormEntrada()" class="btn-success">➕ Nova Entrada</button>
+        <button onclick="mostrarFormSaida()" class="btn-danger">➖ Nova Saída</button>
+      </div>
+
+      <div id="formEntrada" class="form-modal" style="display: none;">
+        <div class="modal-content">
+          <h3>Nova Entrada</h3>
+          <input type="text" id="descricaoEntrada" placeholder="Descrição">
+          <input type="number" id="valorEntrada" placeholder="Valor (R$)" step="0.01">
+          <input type="date" id="dataEntrada">
+          <div class="modal-buttons">
+            <button onclick="adicionarEntrada()" class="btn-success">Salvar</button>
+            <button onclick="fecharModal()" class="btn-secondary">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="formSaida" class="form-modal" style="display: none;">
+        <div class="modal-content">
+          <h3>Nova Saída</h3>
+          <input type="text" id="descricaoSaida" placeholder="Descrição">
+          <input type="number" id="valorSaida" placeholder="Valor (R$)" step="0.01">
+          <input type="date" id="dataSaida">
+          <div class="modal-buttons">
+            <button onclick="adicionarSaida()" class="btn-danger">Salvar</button>
+            <button onclick="fecharModal()" class="btn-secondary">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="historico-caixa">
+        <h3>Histórico de Movimentações</h3>
+        <div id="listaCaixa"></div>
+      </div>
+    </section>
+
+    <!-- Painel Contas Fixas -->
+    <section id="contas" class="painel">
+      <h2>Contas Fixas e Agendamentos</h2>
+      
+      <button onclick="mostrarFormConta()" class="btn-primary">➕ Nova Conta Fixa</button>
+      
+      <div id="formConta" class="form-modal" style="display: none;">
+        <div class="modal-content">
+          <h3>Nova Conta Fixa</h3>
+          <input type="text" id="descricaoConta" placeholder="Descrição (ex: Aluguel)">
+          <input type="number" id="valorConta" placeholder="Valor (R$)" step="0.01">
+          <input type="number" id="diaConta" placeholder="Dia do vencimento (1-31)" min="1" max="31">
+          <select id="tipoConta">
+            <option value="saida">Conta a Pagar</option>
+            <option value="entrada">Conta a Receber</option>
+          </select>
+          <div class="modal-buttons">
+            <button onclick="adicionarConta()" class="btn-success">Salvar</button>
+            <button onclick="fecharModal()" class="btn-secondary">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="contas-lista">
+        <h3>Contas Cadastradas</h3>
+        <div id="listaContas"></div>
+      </div>
+
+      <div class="pendencias">
+        <h3>Pendências</h3>
+        <div id="listaPendencias"></div>
+      </div>
+    </section>
+
+    <!-- Painel Configurações -->
+    <section id="config" class="painel">
+      <div class="config-box">
+        <h2>Configurações da Empresa</h2>
+        
+        <!-- Abas de Configurações -->
+        <div class="config-tabs">
+          <button type="button" onclick="mostrarAbaConfig('empresa')" class="tab-btn active" data-tab="empresa">🏢 Dados da Empresa</button>
+          <button type="button" onclick="mostrarAbaConfig('produtos')" class="tab-btn" data-tab="produtos">📦 Produtos Pré-fixados</button>
+        </div>
+
+        <!-- Aba Dados da Empresa -->
+        <div id="abaEmpresa" class="config-tab active">
+          <form id="formConfig">
+            <label>Nome Fantasia:</label>
+            <input type="text" name="nome_fantasia" required>
+            
+            <label>CNPJ:</label>
+            <input type="text" name="cnpj" required>
+            
+            <label>Região:</label>
+            <input type="text" name="regiao">
+            
+            <label>Endereço (Opcional):</label>
+            <input type="text" name="endereco">
+            
+            <label>Slogan:</label>
+            <input type="text" name="slogan" placeholder="Ex: Qualidade e Confiança">
+            
+            <label>Logo da Empresa (JPG):</label>
+            <input type="file" name="logo" accept="image/jpeg,image/png" id="logoInput">
+            <div id="logoPreview"></div>
+            
+            <label>Link da Pasta Google Drive:</label>
+            <input type="text" name="google_drive">
+            
+            <button type="submit" class="btn-primary">💾 Salvar Configurações</button>
+          </form>
+        </div>
+
+        <!-- Aba Produtos Pré-fixados -->
+        <div id="abaProdutos" class="config-tab">
+          <h3>Cadastro de Produtos Pré-fixados</h3>
+          <p>Cadastre produtos para facilitar a criação de orçamentos</p>
+          
+          <button onclick="mostrarFormProduto()" class="btn-success">➕ Novo Produto</button>
+          
+          <div id="formProduto" class="form-modal" style="display: none;">
+            <div class="modal-content">
+              <h3>Novo Produto</h3>
+              <input type="text" id="nomeProduto" placeholder="Nome do Produto (ex: Lona)">
+              <input type="number" id="valorProduto" placeholder="Valor (R$)" step="0.01">
+              <select id="tipoProduto">
+                <option value="unitario">Valor Unitário</option>
+                <option value="metro_quadrado">Metro Quadrado</option>
+              </select>
+              <div class="modal-buttons">
+                <button onclick="adicionarProduto()" class="btn-success">Salvar</button>
+                <button onclick="fecharModal()" class="btn-secondary">Cancelar</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="produtos-lista">
+            <div id="listaProdutos"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Painel de Relatórios -->
+    <section id="relatorios" class="painel">
+      <h2>Relatórios e Backup</h2>
+      
+      <div class="relatorio-actions">
+        <div class="periodo-relatorio">
+          <label>Período:</label>
+          <input type="date" id="dataInicio">
+          <input type="date" id="dataFim">
+          <button onclick="gerarRelatorio()" class="btn-primary">📊 Gerar Relatório</button>
+        </div>
+      </div>
+
+      <div class="backup-info">
+        <h3>Backup Automático</h3>
+        <p>Relatório mensal será gerado automaticamente todo dia 30/31 de cada mês.</p>
+        <p>PDFs e dados serão enviados para a pasta do Google Drive configurada.</p>
+        <button onclick="fazerBackupManual()" class="btn-info">☁️ Backup Manual</button>
+      </div>
+
+      <div id="relatorioResultado"></div>
+    </section>
+
+    <!-- Painel Histórico de PDFs -->
+    <section id="historico-pdfs" class="painel">
+      <h2>Histórico de PDFs Gerados</h2>
+      <div id="listaHistoricoPdfs"></div>
+    </section>
+  </main>
+
+  <footer class="pdf-footer-small">
+    by BNeural - sistema de gestão empresarial 
+    <a href="tel:+5562985121404">📱 (62) 98512-1404</a>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
+
